@@ -8,10 +8,14 @@
   "scripts": {
     "test": "node --test",
     "parse": "node src/cli.js",
-    "repl": "node src/repl.js"
+    "repl": "node src/repl.js",
+    "start": "node src/server.js"
   },
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.3.0"
+  }
 }
