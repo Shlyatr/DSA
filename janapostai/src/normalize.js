@@ -9,14 +9,22 @@ export function normalize(str) {
   if (!str) return '';
   let text = String(str);
 
-  // Разделение склеенных ключевых слов и цифр (dom10 -> dom 10, flat12 -> flat 12, қабат3 -> қабат 3)
-  const keywords = 'dom|house|home|flat|apt|apartment|kv|kvartira|pater|podyezd|pod|entrance|etazh|et|qabat|kabat|street|st|ulica|ul|дом|кв|этаж|эт|подъезд|под|қабат|пәтер|үй';
-  
-  const regex1 = new RegExp(`\\b(${keywords})(\\d+)\\b`, 'gi');
-  const regex2 = new RegExp(`\\b(\\d+)(${keywords})\\b`, 'gi');
+  // 1. Исправление частых опечаток буквы 'З' вместо цифры '3' в блоках/микрорайонах
+  text = text.replace(/\b([а-яА-Яa-zA-Z]+)\s+З([а-яА-Яa-zA-Z]?)\b/g, '$1 3$2');
 
-  text = text.replace(regex1, '$1 $2');
-  text = text.replace(regex2, '$1 $2');
+  // 2. Список ключевых слов для разделения склеек
+  const keywords = 'дом|house|home|flat|apt|apartment|kv|kvartira|pater|podyezd|pod|entrance|etazh|et|qabat|kabat|street|st|ulica|ul|квартира|кв|этаж|эт|подъезд|подьезд|под|қабат|пәтер|үй|квартал|кв-л|микрорайон|мкр|улица|ул|область|облысы|район|ауданы|көшесі';
+
+  // Число + ключевое слово (например: 66квартал -> 66 квартал, 12дом -> 12 дом)
+  const numKeywordRegex = new RegExp(`(\\d+)(${keywords})\\b`, 'gi');
+  text = text.replace(numKeywordRegex, '$1 $2');
+
+  // Ключевое слово + число (например: dom10 -> dom 10, flat12 -> flat 12)
+  const keywordNumRegex = new RegExp(`\\b(${keywords})(\\d+)`, 'gi');
+  text = text.replace(keywordNumRegex, '$1 $2');
+
+  // Слово + цифра на конце (например: Назарбаева8 -> Назарбаева 8)
+  text = text.replace(/\b([a-zA-Zа-яА-ЯӘөүңғқұһӨҮҢҒҚҰҺ]{3,})(\d+)\b/g, '$1 $2');
 
   return text.trim();
 }
