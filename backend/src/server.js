@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { parseAddress } from './parser.js'; // Обязательно укажите расширение .js
+import { parseAddress, parseAddressDetailed } from './parser.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,10 +31,14 @@ app.post('/api/parse', (req, res) => {
       });
     }
 
-    const parsedResult = parseAddress(raw_address);
+    const record = { id: req.body.id, raw_address };
+    if (req.query.explain) {
+      const { result, meta } = parseAddressDetailed(record);
+      return res.status(200).json({ result, meta });
+    }
 
     return res.status(200).json({
-      result: parsedResult
+      result: parseAddress(record)
     });
   } catch (error) {
     console.error('Ошибка при парсинге адреса:', error);
@@ -56,22 +60,20 @@ app.post('/api/parse/batch', (req, res) => {
       });
     }
 
-    const results = items.map((item, index) => {
-      if (typeof item === 'string') {
-        return {
-          index,
-          result: parseAddress(item)
-        };
-      }
+    // На каждую входную запись всегда возвращается ответ (пустой, если разобрать нечего).
+    const parsed = items.map((item) => (typeof item === 'string' ? { raw_address: item } : item || {}))
+      .map((item) => parseAddress(item));
 
-      const rawAddress = item?.raw_address || item?.address || '';
-      
-      return {
-        ...item,
-        result: rawAddress ? parseAddress(rawAddress) : null,
-        error: !rawAddress ? 'Отсутствует поле raw_address' : undefined
-      };
-    });
+    // ?format=flat — плоский массив в формате ТЗ (sample_output.json)
+    if (req.query.format === 'flat') {
+      return res.status(200).json(parsed);
+    }
+
+    const results = items.map((item, index) => (
+      typeof item === 'string'
+        ? { index, result: parsed[index] }
+        : { ...item, result: parsed[index] }
+    ));
 
     return res.status(200).json(results);
   } catch (error) {
