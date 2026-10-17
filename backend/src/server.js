@@ -1,10 +1,17 @@
 import express from 'express';
+import cors from 'cors';
 import { parseAddress } from './parser.js'; // Обязательно укажите расширение .js
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '10mb' }));
+
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PATCH', 'PUT', "DELETE"],
+  allowedHeaders: ['Content-Type']
+}))
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -27,7 +34,6 @@ app.post('/api/parse', (req, res) => {
     const parsedResult = parseAddress(raw_address);
 
     return res.status(200).json({
-      raw_address,
       result: parsedResult
     });
   } catch (error) {
@@ -54,7 +60,6 @@ app.post('/api/parse/batch', (req, res) => {
       if (typeof item === 'string') {
         return {
           index,
-          raw_address: item,
           result: parseAddress(item)
         };
       }
