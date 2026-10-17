@@ -1,5 +1,3 @@
-<script setup></script>
-
 <template>
   <h1>You did it!</h1>
   <p>
@@ -7,5 +5,7 @@
     documentation
   </p>
 </template>
+
+<script setup></script>
 
 <style scoped></style>
